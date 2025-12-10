@@ -1,3 +1,4 @@
+
 export interface Token {
   symbol: string;
   name: string;
@@ -35,4 +36,34 @@ export interface AIAnalysisResult {
   riskLevel: 'Low' | 'Medium' | 'High';
   summary: string;
   strategy: string;
+}
+
+export interface Position {
+  id: string;
+  token: Token;
+  strategy: string;
+  entryPrice: number;
+  currentPrice: number;
+  amount: number; // USD value
+  pnl: number; // USD value
+  pnlPercent: number;
+  timestamp: number;
+  leverage: number;
+}
+
+export interface TradeHistory {
+  id: string;
+  token: Token;
+  type: 'Arbitrage' | 'Flash Loan' | 'Liquidation';
+  profit: number;
+  gasFee: number;
+  timestamp: number;
+  status: 'Success' | 'Failed' | 'Reverted';
+  hash: string;
+}
+
+export interface PerformanceData {
+  date: string;
+  profit: number;
+  cumulative: number;
 }

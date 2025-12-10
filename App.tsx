@@ -1,16 +1,25 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { StatsGrid } from './components/StatsCards';
 import { MarketChart } from './components/MarketChart';
 import { OpportunityRow } from './components/OpportunityRow';
 import { GeminiPanel } from './components/GeminiPanel';
+import { PositionsPage } from './components/PositionsPage';
+import { HistoryPage } from './components/HistoryPage';
+import { AnalyticsPage } from './components/AnalyticsPage';
 import { generateOpportunities, generateChartData } from './services/mockDataService';
 import { analyzeArbitrageOpportunity } from './services/geminiService';
 import { ArbitrageOpportunity, MarketDataPoint } from './types';
 import { RefreshCw, Filter, Download } from 'lucide-react';
 
+type ViewState = 'dashboard' | 'positions' | 'history' | 'analytics';
+
 const App: React.FC = () => {
-  // State
+  // Navigation State
+  const [currentView, setCurrentView] = useState<ViewState>('dashboard');
+
+  // Dashboard Data State
   const [isConnected, setIsConnected] = useState(false);
   const [opportunities, setOpportunities] = useState<ArbitrageOpportunity[]>([]);
   const [selectedOpp, setSelectedOpp] = useState<ArbitrageOpportunity | null>(null);
@@ -26,7 +35,7 @@ const App: React.FC = () => {
     const newOpps = generateOpportunities();
     setOpportunities(newOpps);
     
-    // Default selection if none selected
+    // Default selection logic
     if (!selectedOpp && newOpps.length > 0) {
       handleSelectOpp(newOpps[0]);
     } else if (selectedOpp) {
@@ -40,7 +49,7 @@ const App: React.FC = () => {
     refreshData();
     const interval = setInterval(refreshData, 5000); // Live update effect
     return () => clearInterval(interval);
-  }, []);
+  }, []); // Remove selectedOpp from dependency array to avoid reseting selection on every tick unless necessary
 
   // Update chart when selection changes
   const handleSelectOpp = (opp: ArbitrageOpportunity) => {
@@ -66,19 +75,10 @@ const App: React.FC = () => {
     setIsAnalyzing(false);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 font-sans selection:bg-brand-500/30">
-      <Header 
-        onConnect={handleConnect} 
-        isConnected={isConnected} 
-        walletAddress="0x71C...9A23" 
-      />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Top Stats */}
+  // Render Dashboard Content
+  const renderDashboard = () => (
+    <div className="animate-in fade-in duration-500">
         <StatsGrid />
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Main Content: Opportunity Table */}
@@ -91,15 +91,15 @@ const App: React.FC = () => {
               <div className="flex gap-2">
                 <button 
                   onClick={refreshData} 
-                  className="p-2 bg-gray-800 text-gray-400 rounded-lg hover:text-white transition-colors"
+                  className="p-2 bg-gray-800 text-gray-400 rounded-lg hover:text-white transition-colors border border-gray-700 hover:border-gray-600"
                   title="Refresh Data"
                 >
                   <RefreshCw size={18} />
                 </button>
-                <button className="p-2 bg-gray-800 text-gray-400 rounded-lg hover:text-white transition-colors">
+                <button className="p-2 bg-gray-800 text-gray-400 rounded-lg hover:text-white transition-colors border border-gray-700 hover:border-gray-600">
                   <Filter size={18} />
                 </button>
-                <button className="p-2 bg-gray-800 text-gray-400 rounded-lg hover:text-white transition-colors">
+                <button className="p-2 bg-gray-800 text-gray-400 rounded-lg hover:text-white transition-colors border border-gray-700 hover:border-gray-600">
                   <Download size={18} />
                 </button>
               </div>
@@ -179,6 +179,24 @@ const App: React.FC = () => {
             )}
           </div>
         </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-950 text-gray-100 font-sans selection:bg-brand-500/30">
+      <Header 
+        onConnect={handleConnect} 
+        isConnected={isConnected} 
+        walletAddress="0x71C...9A23"
+        currentView={currentView}
+        onNavigate={setCurrentView}
+      />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {currentView === 'dashboard' && renderDashboard()}
+        {currentView === 'positions' && <PositionsPage />}
+        {currentView === 'history' && <HistoryPage />}
+        {currentView === 'analytics' && <AnalyticsPage />}
       </main>
 
       {/* AI Modal */}
